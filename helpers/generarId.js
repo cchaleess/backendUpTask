@@ -1,0 +1,8 @@
+const generarId = () => {
+
+    let random = Math.random().toString(32).substring(2);
+    let date = Date.now().toString(32);
+
+    return random + date;
+}
+export default generarId;
