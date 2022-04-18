@@ -116,7 +116,15 @@ const nuevoPassword = async (req, res) => {
     }
 };
 
+const perfil = async (req, res) => {
+    console.log(req.usuario);
+    const {usuario} = req;
+    res.json(usuario);
+
+};
 
 
 
-export { registrar, autenticar, confirmar , olvidePassword, comprobacionToken, nuevoPassword};
+
+
+export { registrar, autenticar, confirmar , olvidePassword, comprobacionToken, nuevoPassword, perfil};

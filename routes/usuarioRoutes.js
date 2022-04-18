@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
-import {autenticar, registrar, confirmar, olvidePassword, comprobacionToken, nuevoPassword } from '../controllers/usuarioController.js';
+import {autenticar, registrar, confirmar, olvidePassword, comprobacionToken, nuevoPassword, perfil } from '../controllers/usuarioController.js';
+import checkAuth from '../middleware/checkAuth.js';
 
 //Autenticacion, registrar y confirmar usuario
 
@@ -13,6 +14,8 @@ router.post('/olvide-password/:token', nuevoPassword);
  */
 //Al tener mismo endpoint, se puede usar una sola ruta:
 router.route('/olvide-password/:token').get(comprobacionToken).post(nuevoPassword);
+
+router.get('/perfil', checkAuth, perfil);
 
 
 
