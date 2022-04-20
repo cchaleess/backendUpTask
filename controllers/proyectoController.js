@@ -1,4 +1,5 @@
 import Proyecto from "../models/Proyecto.js";
+import Tarea from "../models/Tarea.js";
 
 const obtenerProyectos = async (req, res) => {
   try {
@@ -40,7 +41,10 @@ const obtenerProyecto = async (req, res) => {
         return res.status(401).json({ msg : error.message });
     
   }
-  res.json(proyecto);
+
+  //Obtener tareas
+  const tareas = await Tarea.find().where("proyecto").equals(proyecto._id);
+  res.json({ proyecto, tareas });
 };
 
 const editarProyecto = async (req, res) => {
@@ -68,17 +72,31 @@ const editarProyecto = async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-    
+
 };
 
 const eliminarProyecto = async (req, res) => {
-  const { id } = req.params;
-  try {
-    await Proyecto.findByIdAndDelete(id);
-    res.json({ msg: "Proyecto eliminado" });
-  } catch (error) {
-    console.log(error);
-  }
+    const { id } = req.params;
+    const proyecto = await Proyecto.findById(id);
+  
+    if (!proyecto) {
+        const error = new Error("Proyecto no encontrado");
+  
+      return res.status(404).json({ msg : error.message });
+    }
+  
+    if (proyecto.creador.toString() !== req.usuario._id.toString()) {
+          const error = new Error("No tienes permisos para ver este proyecto");
+          return res.status(401).json({ msg : error.message });      
+    }
+
+    try {
+        await proyecto.deleteOne();
+        res.json({ msg: "Proyecto eliminado" });
+    } catch (error) {
+        console.log(error);
+    }
+
 };
 
 const agregarColaborador = async (req, res) => {
@@ -108,15 +126,6 @@ const eliminarColaborador = async (req, res) => {
   }
 };
 
-const obtenerTareas = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const proyecto = await Proyecto.findById(id);
-    res.json(proyecto.tareas);
-  } catch (error) {
-    console.log(error);
-  }
-};
 
 export {
   obtenerProyectos,
@@ -126,5 +135,4 @@ export {
   eliminarProyecto,
   agregarColaborador,
   eliminarColaborador,
-  obtenerTareas,
 };
