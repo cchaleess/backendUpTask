@@ -1,6 +1,7 @@
 import Usuario from "../models/Usuario.js";
 import generarJWT from "../helpers/generarJWT.js";
 import generarId from "../helpers/generarId.js";
+import { emailRegistro, emailOlvidePassword } from "../helpers/emails.js";
 
 const registrar = async (req, res) => {
   //Evitar registro de usuarios duplicados
@@ -14,8 +15,17 @@ const registrar = async (req, res) => {
   try {
     const usuario = new Usuario(req.body);
     usuario.token = generarId();
-    const usuarioAlmacenado = await usuario.save();
-    res.json(usuarioAlmacenado);
+    await usuario.save();
+    //Enviar email de confirmacion
+    //console.log(usuario);
+    emailRegistro({
+      email : usuario.email,
+      nombre : usuario.nombre,
+      token : usuario.token
+    });
+    res.json ({
+       msg: "Usuario registrado, se ha enviado un email de confirmación",
+    });
   } catch (error) {
     console.log(error);
   }
@@ -51,10 +61,11 @@ const autenticar = async (req, res) => {
 
 const confirmar = async (req, res) => {
   const { id } = req.params;
-    console.log(id);
-  const usuario = await Usuario.findOne({ id });
+  console.log(id);
+  const usuario = await Usuario.findOne({ token: id });
+  console.log(usuario);
   if (!usuario) {
-    const error = new Error("Token no valido");
+    const error = new Error("No se ha podido confirmar el usuario");
     return res.status(404).json({ msg: error.message });
   }
   try {
@@ -62,7 +73,7 @@ const confirmar = async (req, res) => {
     //Token de un solo uso.Eliminar el token para que no se pueda volver a usar, ya que se ha confirmado.
     usuario.token = "";
     await usuario.save();
-    res.json({ msg: "Usuario confirmado" });
+    res.json({ msg: "Usuario confirmado correctamente" });
   } catch (error) {
     console.log(error);
   }
@@ -78,7 +89,15 @@ const olvidePassword = async (req, res) => {
     try {
         usuario.token = generarId();
         await usuario.save();
-        res.json({ msg: "Token con instrucciones enviado" });
+      //Enviar email de confirmacion
+      emailOlvidePassword({
+        email : usuario.email,
+        nombre : usuario.nombre,
+        token : usuario.token
+      });
+
+
+        res.json({ msg: "Se han enviado las instrucciones al mail" });
     } catch (error) {
         console.log(error);
     }
@@ -86,7 +105,9 @@ const olvidePassword = async (req, res) => {
 
 const comprobacionToken = async (req, res) => {
     const { token } = req.params;
+    console.log(token);
     const tokenValido = await Usuario.findOne({ token });
+    console.log(tokenValido);
     if (!tokenValido) {
         const error = new Error("Token no valido");
         return res.status(404).json({ msg: error.message });

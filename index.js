@@ -4,12 +4,29 @@ import dotenv from 'dotenv';
 import usuarioRoutes from './routes/usuarioRoutes.js';
 import proyectoRoutes from './routes/proyectoRoutes.js';
 import tareaRoutes from './routes/tareaRoutes.js';
+import cors from 'cors';
 
 const app = express();
 
 app.use(express.json()); //Habilita el uso de JSON en las peticiones
 
 dotenv.config();
+
+//habilitar CORS
+const whiteList = [ process.env.FRONTEND_URL ];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (whiteList.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+};
+app.use(cors(corsOptions));
+
+
 
 conectarDB();
 
